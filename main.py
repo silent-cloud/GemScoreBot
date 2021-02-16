@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 #     token = info_data.readline()
 
 bot = commands.Bot(command_prefix=';')
+bot.remove_command('help')
 
 @bot.command()
 async def verify(ctx, user: discord.Member):
@@ -29,7 +30,7 @@ async def verify(ctx, user: discord.Member):
             user_exists = True
             if not data_list[i]['is_verified']:
                 data_list[i]['is_verified'] = True
-                data_list[i]['verified_by'] = str(ctx.author) + " (" + ctx.author.display_name + ")"
+                data_list[i]['verified_by'] = ctx.author.display_name + " (" + str(ctx.author) + ")"
             else:
                 verified = True
             break
@@ -165,7 +166,21 @@ async def unverify_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('You have not specified a user you want to unverify.')
 
-# TODO Gem command with user
+@update.error
+async def update_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('You have not specified a link to the gem score picture.')
+
+@bot.command()
+async def help(ctx):
+  message = "```;update <link> - to record gem score\n"
+  message = message + ";gem - to display it\n"
+  message = message + ";verify - to verify someone's gem (no role checks yet)\n"
+  message = message + ";unverify - to unverify someone's gem (no role checks yet)```"
+  await ctx.send(message)
+
+# TODO Change name order for "Verified By" to (Nickname, Discord Tag)
+# TODO Add a target user argument for gem command
 
 @bot.event
 async def on_ready():
