@@ -1,14 +1,16 @@
 import discord
+import os
 import logging
 import json
 import validators
 from discord.ext import commands
+from keep_alive import keep_alive
 
 logging.basicConfig(level=logging.INFO)
 
-token = None
-with open("info.txt", "r") as info_data:
-    token = info_data.readline()
+# token = None
+# with open("info.txt", "r") as info_data:
+#     token = info_data.readline()
 
 bot = commands.Bot(command_prefix=';')
 
@@ -154,12 +156,12 @@ async def gem(ctx):
         await ctx.send("You have not submitted your gem, please use the update command to submit your gem.")
 
 @verify.error
-async def info_error(ctx, error):
+async def verify_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('You have not specified a user you want to verify.')
 
 @unverify.error
-async def info_error(ctx, error):
+async def unverify_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('You have not specified a user you want to unverify.')
 
@@ -169,5 +171,5 @@ async def info_error(ctx, error):
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
 
-
-bot.run(token)
+keep_alive()
+bot.run(os.getenv('TOKEN'))
