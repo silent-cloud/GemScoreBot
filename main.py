@@ -12,7 +12,6 @@ with open("info.txt", "r") as info_data:
 
 bot = commands.Bot(command_prefix=';')
 
-
 @bot.command()
 async def verify(ctx, user: discord.Member):
     user_exists = False
@@ -113,7 +112,7 @@ async def update(ctx, arg1):
 
 @bot.command()
 async def gem(ctx):
-    user_name = str(ctx.author) + " (" + ctx.author.display_name + ")"
+    user_name = ctx.author.display_name + " (" + str(ctx.author) + ")"
     user_avatar = str(ctx.author.avatar_url)
     user_exists = False
     user_gem_link = ""
@@ -154,6 +153,15 @@ async def gem(ctx):
     else:
         await ctx.send("You have not submitted your gem, please use the update command to submit your gem.")
 
+@verify.error
+async def info_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('You have not specified a user you want to verify.')
+
+@unverify.error
+async def info_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('You have not specified a user you want to unverify.')
 
 # TODO Gem command with user
 
