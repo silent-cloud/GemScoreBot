@@ -114,47 +114,57 @@ async def update(ctx, arg1):
 
 
 @bot.command()
-async def gem(ctx):
+async def gem(ctx, *args: discord.Member):
+  if (len(args) < 1):
+    user = ctx.author
     user_name = ctx.author.display_name + " (" + str(ctx.author) + ")"
     user_avatar = str(ctx.author.avatar_url)
-    user_exists = False
-    user_gem_link = ""
-    user_verified = False
-    user_verified_msg = ""
-    user_verified_by = ""
-    i = 0
+  else:
+    user = args[0]
+    user_name = args[0].display_name + " (" + str(args[0]) + ")"
+    user_avatar = str(args[0].avatar_url)
 
-    with open("data.json", "r") as data_file:
-        json_data = data_file.read()
-    data_list = json.loads(json_data)
+  user_exists = False
+  user_gem_link = ""
+  user_verified = False
+  user_verified_msg = ""
+  user_verified_by = ""
+  i = 0
 
-    while i < len(data_list) and not user_exists:
-        if data_list[i]['user'] == str(ctx.author):
-            user_exists = True
-            user_verified = data_list[i]['is_verified']
-            user_verified_by = data_list[i]['verified_by']
-            user_gem_link = data_list[i]['link']
-            break
-        else:
-            i += 1
+  with open("data.json", "r") as data_file:
+      json_data = data_file.read()
+  data_list = json.loads(json_data)
 
+  while i < len(data_list) and not user_exists:
+      if data_list[i]['user'] == str(user):
+          user_exists = True
+          user_verified = data_list[i]['is_verified']
+          user_verified_by = data_list[i]['verified_by']
+          user_gem_link = data_list[i]['link']
+          break
+      else:
+          i += 1
+
+  if user_verified:
+    user_verified_msg = "Yes"
+  else:
+    user_verified_msg = "No"
+
+  if user_exists:
+    embed = discord.Embed()
+    embed.set_author(name=user_name)
+    embed.set_thumbnail(url=user_avatar)
+    embed.add_field(name="Verified?", value=user_verified_msg, inline=True)
     if user_verified:
-        user_verified_msg = "Yes"
+      embed.add_field(name="Verified By", value=user_verified_by, inline=True)
+    embed.add_field(name="Gem Score Link:", value=user_gem_link, inline=False)
+    embed.set_image(url=user_gem_link)
+    await ctx.send(embed=embed)
+  else:
+    if (len(args) < 1):
+      await ctx.send("You have not submitted your gem, please use the update command to submit your gem.")
     else:
-        user_verified_msg = "No"
-
-    if user_exists:
-        embed = discord.Embed()
-        embed.set_author(name=user_name)
-        embed.set_thumbnail(url=user_avatar)
-        embed.add_field(name="Verified?", value=user_verified_msg, inline=True)
-        if user_verified:
-            embed.add_field(name="Verified By", value=user_verified_by, inline=True)
-        embed.add_field(name="Gem Score Link:", value=user_gem_link, inline=False)
-        embed.set_image(url=user_gem_link)
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("You have not submitted your gem, please use the update command to submit your gem.")
+      await ctx.send("This person has not submitted their gem.")
 
 @verify.error
 async def verify_error(ctx, error):
@@ -173,14 +183,12 @@ async def update_error(ctx, error):
 
 @bot.command()
 async def help(ctx):
-  message = "```;update <link> - to record gem score\n"
-  message = message + ";gem - to display it\n"
+  message = "```;update <link> - to record your gem score\n"
+  message = message + ";gem - to display your gem score\n"
+  message = message + ";gem <user> - to see other people's gem score\n"
   message = message + ";verify - to verify someone's gem (no role checks yet)\n"
   message = message + ";unverify - to unverify someone's gem (no role checks yet)```"
   await ctx.send(message)
-
-# TODO Change name order for "Verified By" to (Nickname, Discord Tag)
-# TODO Add a target user argument for gem command
 
 @bot.event
 async def on_ready():
