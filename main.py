@@ -151,7 +151,7 @@ async def gem(ctx, *args: discord.Member):
     user_verified_msg = "No"
 
   if user_exists:
-    embed = discord.Embed()
+    embed = discord.Embed() 
     embed.set_author(name=user_name)
     embed.set_thumbnail(url=user_avatar)
     embed.add_field(name="Verified?", value=user_verified_msg, inline=True)
