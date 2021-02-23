@@ -151,7 +151,7 @@ async def gem(ctx, *args: discord.Member):
     user_verified_msg = "No"
 
   if user_exists:
-    embed = discord.Embed() 
+    embed = discord.Embed()
     embed.set_author(name=user_name)
     embed.set_thumbnail(url=user_avatar)
     embed.add_field(name="Verified?", value=user_verified_msg, inline=True)
@@ -196,3 +196,16 @@ async def on_ready():
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
+
+# TODO: Add Search by Nickname functionality to gem command
+# Steps:
+# (1) Convert *args to type String
+# (2) Join the *args by using space
+# (3) Iterate through the list of members in the guild
+# (4) Compare the joined argument with member display_names
+# (5) If joined argument and display_name matchm, add all caught entries to a dynamic array
+# (6) If dynamic array size is greater than 1, display a question to the user about whose gem score they want to see by listing all caught entries by "nickname (discord tag)"
+# (7) If dynamic array size is 1, display gem score
+# (8) If dynamic array is 0, search by discord tag instead
+# (9) If discord tag exists, display gem
+# (10) If discord tag doesn't exist, display appropriate error message.
