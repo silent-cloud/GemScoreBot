@@ -3,6 +3,7 @@ import os
 import logging
 import json
 import validators
+import asyncio
 from discord.ext import commands
 from keep_alive import keep_alive
 
@@ -12,7 +13,10 @@ logging.basicConfig(level=logging.INFO)
 # with open("info.txt", "r") as info_data:
 #     token = info_data.readline()
 
-bot = commands.Bot(command_prefix=';')
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix=';', intents=intents)
+
 bot.remove_command('help')
 
 @bot.command()
@@ -114,15 +118,71 @@ async def update(ctx, arg1):
 
 
 @bot.command()
-async def gem(ctx, *args: discord.Member):
+async def gem(ctx, *args):
+
+  # No arguments, display the user's gem score
   if (len(args) < 1):
     user = ctx.author
     user_name = ctx.author.display_name + " (" + str(ctx.author) + ")"
     user_avatar = str(ctx.author.avatar_url)
+  elif(len(args) == 1 and len(args[0]) == 1):
+    await ctx.send("Cannot search with one character, please try again.")
+    return
   else:
-    user = args[0]
-    user_name = args[0].display_name + " (" + str(args[0]) + ")"
-    user_avatar = str(args[0].avatar_url)
+    user = ""
+    user_raw = ' '.join(args)
+    user_list = ctx.guild.members
+    duplicate_name_list = []
+
+    if (user_raw.startswith("<@!")):
+      user_raw = user_raw.strip("<@!>")
+      user_raw = str(await bot.fetch_user(int(user_raw)))
+
+    # Check the member list for name given, either nickname or discord tag
+    for i in user_list:
+      if (user_raw.lower() in i.display_name.lower() or user_raw.lower() in str(i).lower()):
+        duplicate_name_list.append(i)
+
+    if (len(duplicate_name_list) == 0):
+      await ctx.send("There is no user in the server with that name.")
+      return
+    # No duplicate found
+    elif (len(duplicate_name_list) == 1):
+      user = duplicate_name_list[0]
+    # Duplicates found
+    elif (len(duplicate_name_list) > 1):
+      channel = ctx.channel
+
+      message = "```I found {} users with that name\n".format(len(duplicate_name_list))
+      message = message + "Please type the number of the user whose gem you want to see\n\n"
+        
+      count = 0
+      for i in duplicate_name_list:
+        count = count + 1
+        message = message + "[{}] {} ({})\n".format(count, i.display_name, str(i))
+      message = message + "```"
+
+      await channel.send(message)
+
+      def check(m):
+        return m.author == ctx.author and m.content.isnumeric() and 1 <= int(m.content) <= len(duplicate_name_list) and m.channel == channel
+
+      try:
+        msg = await bot.wait_for('message', timeout=60.0, check=check)
+      except asyncio.TimeoutError:
+        #def is_me(m):
+          #return m.author == bot.user
+
+        #await channel.purge(limit=1, check=is_me)
+        await channel.send("You did not respond in time. Please try again.")
+        return
+      else:
+        user = duplicate_name_list[int(msg.content) - 1]
+
+
+
+  user_name = user.display_name + " (" + str(user) + ")"
+  user_avatar = str(user.avatar_url)
 
   user_exists = False
   user_gem_link = ""
@@ -145,10 +205,7 @@ async def gem(ctx, *args: discord.Member):
       else:
           i += 1
 
-  if user_verified:
-    user_verified_msg = "Yes"
-  else:
-    user_verified_msg = "No"
+  user_verified_msg = "Yes" if user_verified else "No"
 
   if user_exists:
     embed = discord.Embed()
@@ -197,7 +254,7 @@ async def on_ready():
 keep_alive()
 bot.run(os.getenv('TOKEN'))
 
-# TODO: Add Search by Nickname functionality to gem command
+# TODO: Add Search by Nickname functionality to gem command (Finished)
 # Steps:
 # (1) Convert *args to type String
 # (2) Join the *args by using space
@@ -209,3 +266,5 @@ bot.run(os.getenv('TOKEN'))
 # (8) If dynamic array is 0, search by discord tag instead
 # (9) If discord tag exists, display gem
 # (10) If discord tag doesn't exist, display appropriate error message.
+
+#TODO: Cancel display gem duplicate question after user calls up gem command again
