@@ -170,13 +170,17 @@ async def gem(ctx, *args):
       try:
         msg = await bot.wait_for('message', timeout=60.0, check=check)
       except asyncio.TimeoutError:
-        #def is_me(m):
-          #return m.author == bot.user
+        def is_me(m):
+          return m.author == bot.user
 
-        #await channel.purge(limit=1, check=is_me)
+        await channel.purge(limit=1, check=is_me)
         await channel.send("You did not respond in time. Please try again.")
         return
       else:
+        def q_and_a(m):
+          return m.author == bot.user or (m.author == ctx.author and m.content.isnumeric() and 1 <= int(m.content) <= len(duplicate_name_list))
+
+        await channel.purge(limit=2, check=q_and_a)
         user = duplicate_name_list[int(msg.content) - 1]
 
 
